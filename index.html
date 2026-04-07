@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perekura OS v13.1 - The True Archive</title>
+    <title>Perekura OS v13.2 - Diagnostics Update</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -27,8 +27,7 @@
         .visual-stage { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; position: relative; }
         #canvas-container { width: 350px; height: 350px; border: 1px solid var(--border); background-color: #0a0a0c; cursor: grab; border-radius: 8px; box-shadow: 0 4px 30px rgba(0, 255, 65, 0.08);}
         #canvas-container:active { cursor: grabbing; }
-        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; animation: pulse 1.5s infinite; pointer-events: none;}
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; pointer-events: none;}
 
         .settings-panel { background-color: var(--card); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px;}
         .settings-header { color: #71717a; font-size: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 5px; margin-top: 5px; font-weight: bold; letter-spacing: 1px;}
@@ -59,12 +58,12 @@
 <div class="container">
     <div class="header">
         <h1 class="title">PEREKURA<span>_OS</span></h1>
-        <div class="subtitle">v13.1: THE TRUE ARCHIVE EXPANSION</div>
+        <div class="subtitle">v13.2: DIAGNOSTICS DEPLOYMENT</div>
     </div>
 
     <div class="visual-stage">
         <div id="canvas-container"></div>
-        <div id="loading-text">MOUNTING PEREKUR_MASK.GLB...</div>
+        <div id="loading-text">MOUNTING MESH...</div>
     </div>
 
     <div class="settings-panel">
@@ -100,14 +99,13 @@
             <option value="3">3. GVLOJY & Caps-Lock Paranoia</option>
             <option value="4">4. Samzareulos Omebi & Lesbosi</option>
             <option value="5">5. Existential Geography & Anatomy</option>
-            <option value="6">6. Fake Math & Deep Thoughts</option>
-            <option value="7">7. The Streamer & Glovo Crisis</option>
+            <option value="6">6. The Streamer & Glovo Crisis</option>
             <option value="8" selected>8. PURE CHAOS (OMNIBUS MASHUP)</option>
         </select>
         <button class="btn-exec" onclick="generatePost()">EXECUTE</button>
     </div>
 
-    <div class="output-box" id="output">System initialized. Trillions of permutations available...</div>
+    <div class="output-box" id="output">System initialized. Awaiting commands...</div>
     <button class="btn-copy" id="copyBtn" onclick="copyText()">📋 COPY DATA</button>
     <button class="btn-toggle active" id="audioToggle" onclick="toggleAudio()">🔊 EDDY PROTOCOL: ON</button>
     <div class="log-box" id="logBox"></div>
@@ -148,228 +146,73 @@
 
     function loadBuiltInModel() {
         const loader = new THREE.GLTFLoader(), loadingText = document.getElementById('loading-text');
-        loader.load('perekur_MASK.glb', function (gltf) {
-            loadingText.style.display = 'none'; if (faceMesh) scene.remove(faceMesh); faceMesh = gltf.scene;
-            mouthMesh = null; mouthMorphIndex = -1;
-            faceMesh.traverse((child) => {
-                if (child.isMesh && child.morphTargetDictionary) {
-                    for (const key in child.morphTargetDictionary) {
-                        if (mouthMorphIndex === -1) { mouthMesh = child; mouthMorphIndex = child.morphTargetDictionary[key]; }
-                        if (key.toLowerCase().includes('mouth')) { mouthMesh = child; mouthMorphIndex = child.morphTargetDictionary[key]; }
+        
+        // V13.2 FIX: EXPLICIT RELATIVE PATHING
+        loader.load('./perekur_MASK.glb', 
+            function (gltf) {
+                loadingText.style.display = 'none'; if (faceMesh) scene.remove(faceMesh); faceMesh = gltf.scene;
+                mouthMesh = null; mouthMorphIndex = -1;
+                faceMesh.traverse((child) => {
+                    if (child.isMesh && child.morphTargetDictionary) {
+                        for (const key in child.morphTargetDictionary) {
+                            if (mouthMorphIndex === -1) { mouthMesh = child; mouthMorphIndex = child.morphTargetDictionary[key]; }
+                            if (key.toLowerCase().includes('mouth')) { mouthMesh = child; mouthMorphIndex = child.morphTargetDictionary[key]; }
+                        }
                     }
+                });
+                const box = new THREE.Box3().setFromObject(faceMesh), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+                const scale = 3.5 / Math.max(size.x, size.y, size.z);
+                faceMesh.scale.set(scale, scale, scale); faceMesh.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+                scene.add(faceMesh);
+            }, 
+            function (xhr) {
+                // V13.2 FIX: LIVE LOADING PERCENTAGE
+                if (xhr.lengthComputable) {
+                    const percentComplete = xhr.loaded / xhr.total * 100;
+                    loadingText.innerText = "MOUNTING: " + Math.round(percentComplete, 2) + "%";
                 }
-            });
-            const box = new THREE.Box3().setFromObject(faceMesh), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
-            const scale = 3.5 / Math.max(size.x, size.y, size.z);
-            faceMesh.scale.set(scale, scale, scale); faceMesh.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-            scene.add(faceMesh);
-        }, undefined, function () { loadingText.innerText = "CORS BLOCK: HOST ON GITHUB"; loadingText.style.color = "var(--alert)"; loadingText.style.animation = "none"; });
+            }, 
+            function (error) {
+                // V13.2 FIX: EXPLICIT CONSOLE ERROR DUMP
+                console.error("CRITICAL GLTF LOADER ERROR:", error);
+                loadingText.innerText = "ERROR! CHECK CHROME CONSOLE."; 
+                loadingText.style.color = "var(--alert)"; 
+            }
+        );
     }
 
-    // =====================================================================================
-    // THE MASSIVE LORE EXPANSION
-    // =====================================================================================
+    // --- LORE DICTIONARY ---
     const lore = {
-        allies: [
-            "nesvia", "bnesvia", "egnecio", "egnecios mamis bendi", "nesvias babua", "Grungaloz Grengaloz Efremidze", 
-            "Ege Getia", "Gocho Inaugureli", "tyanafseleli 45 wlis strimeri", "nika ''blinadze''", "anzoras gogos bichi", 
-            "aleksandra paichadze", "nesvias papa", "chemi orive bebiis colebi", "11% pensionerebi", "70% lesbosis mosaxleoba", 
-            "albert ainshtaini", "jennifer bezos"
-        ],
-        villains: [
-            "inogi xvlikia", "GVENJO GVIWADZE", "evxrake chavxrakiani", "yofili sheyvarebulis babua", "yofili meugle", 
-            "kutu edzgveradz", "saechvo kaci", "@gvinbleidd13", "botebi", "glovo", "xelovnuri inteleqti", "39 wlis gogo"
-        ],
-        academics: [
-            "uvujavu universteti", "kakebis meurneobis departamenti", "istoriis departamenti", "skandimabia", 
-            "uvujavu universitetis gvlojis mkvlevari", "balaklaviatiura - blakalavtura - blakavriati???? blakaravriati???????", 
-            "uvujavu universtetis kursdamtavrebuli", "Uvujavu University leqtor"
-        ],
-        hoods: [
-            "sofeli lesbosi", "sofel tyanafselshi", "samzareulos omebis velze", "cixidan", "krona elenidzis 10090009 nomershi", 
-            "Qvisha Glengoz OTARAAnis quchaze 10000 nomershi", "evlip urtmelianis 100000 nomershi", "batumi", "didi balkonze"
-        ],
-        concepts: [
-            "GVLOJY", "CHATCHPD", "pornografiuli mexsiereba", "donald trimpu", "giganturi saswori 1100 kilogrami", 
-            "didi sattulia meate sadtulze", "xaladeci", "100$iani granti", "atomebis shejvareba", "eqsperimentul veips", 
-            "giganturi lursmnebi fexebshi", "chliqebi", "1000 dzagli", "1000 miliardi kata da 20000 zombi", "shaurma", "nardi sawolshi"
-        ],
+        allies: ["nesvia", "bnesvia", "egnecio", "egnecios mamis bendi", "nesvias babua", "Grungaloz Grengaloz Efremidze", "Ege Getia", "Gocho Inaugureli", "tyanafseleli 45 wlis strimeri", "nika ''blinadze''", "anzoras gogos bichi", "aleksandra paichadze", "nesvias papa", "chemi orive bebiis colebi", "11% pensionerebi", "70% lesbosis mosaxleoba", "albert ainshtaini", "jennifer bezos"],
+        villains: ["inogi xvlikia", "GVENJO GVIWADZE", "evxrake chavxrakiani", "yofili sheyvarebulis babua", "yofili meugle", "kutu edzgveradz", "saechvo kaci", "@gvinbleidd13", "botebi", "glovo", "xelovnuri inteleqti", "39 wlis gogo"],
+        academics: ["uvujavu universteti", "kakebis meurneobis departamenti", "istoriis departamenti", "skandimabia", "uvujavu universitetis gvlojis mkvlevari", "balaklaviatiura - blakalavtura - blakavriati???? blakaravriati???????", "uvujavu universtetis kursdamtavrebuli", "Uvujavu University leqtor"],
+        hoods: ["sofeli lesbosi", "sofel tyanafselshi", "samzareulos omebis velze", "cixidan", "krona elenidzis 10090009 nomershi", "Qvisha Glengoz OTARAAnis quchaze 10000 nomershi", "evlip urtmelianis 100000 nomershi", "batumi", "didi balkonze"],
+        concepts: ["GVLOJY", "CHATCHPD", "pornografiuli mexsiereba", "donald trimpu", "giganturi saswori 1100 kilogrami", "didi sattulia meate sadtulze", "xaladeci", "100$iani granti", "atomebis shejvareba", "eqsperimentul veips", "giganturi lursmnebi fexebshi", "chliqebi", "1000 dzagli", "1000 miliardi kata da 20000 zombi", "shaurma", "nardi sawolshi"],
         emojis: [" 😡🤬🤬🤬🤬", " 😈😈😈", " 🤔🤔🤔", " 🥰🥰🥰🥰", " 😑", " 💡💡", " 😂😂😂", " 💀💀💀", " 🦇🦇🦇", " ❤️❤️❤️❤️", " 🥶"]
     };
 
-    const connectors = [
-        " da am dros ", " xoda turme ", " mara uceb ", " da aseve ", " imitoro ", " anu rogorc gasagebi ari ", 
-        " xoda eg turme yvelas mozdis ", " da mere kide ", " mara ro davfiqrde ", " ise vafshe dawvero? ", " ,, "
-    ];
+    const connectors = [" da am dros ", " xoda turme ", " mara uceb ", " da aseve ", " imitoro ", " anu rogorc gasagebi ari ", " xoda eg turme yvelas mozdis ", " da mere kide ", " mara ro davfiqrde ", " ise vafshe dawvero? ", " ,, "];
 
     const vibes = {
-        "1": { 
-            setups: [
-                "@uvujavuuniversity gamarjoba rogor gamogigzanvot me dawvere kvleva {c}ze... ", 
-                "{a} - 198 wlis - mamackaci - gardacvlili - {ac}. ", 
-                "uvujavu universtetis kursdamtavrebuli {a} moewyo {ac}shi gtxovt mivulocot komentarebshi ❤️❤️❤️❤️ ", 
-                "vitxov dafinansebas ramdenime fult ro shevdzlo {hd} mogzauroba imistvis rom filtvebi uketesad gaviwmindo. ",
-                "uvujavu universtetshi grantebs idzlevian??? ramden procenbts???? ",
-                "uvujavu universretshi rogor chavabaro???????? ",
-                "nesvia bnesvia - 33 wlis - mamakaci - Uvujavu Universitetis {ac}. ",
-                "uvujavu universtetidan damirekes {hd}dan vinc chaabarebs chventan 100$ian grants vadzlevto.. ",
-                "ara ra. veravin sheedreba nesvias papas \"{a}\" ehh....naadrevad datova es samyaro 198 wlis asakshi. "
-            ], 
-            comps: [
-                "mara uari mitxres imitoro {v}s icnobs da eg mushaobs mand. ", 
-                "da am dros {a}s daureket gtxovt ar mpasuxobs nomeria : 111111111 dges pirveli aprilj. ", 
-                "gamoviyene dziritadat CHATCHPD da wiki pedia. ",
-                "uvujavu universtetidan damirekes {hd}dan vinc chaabarebs chventan 100$ian grants vadzlevto.. ",
-                "filtvebebis da gulis dartymit :( ",
-                "sofel lesbosshi daucheriat ''{v}'' imedi maqvs arasodes gamoushveben - {a} - {ac}. "
-            ], 
-            concs: [
-                "dafiqrdeboda kaci", "uvujavu universretshi rogor chavabaro????????", "filtvebebis da gulis dartymit :(", "daucheriat imedi maqvs arasodes gamoushveben - Gocho Inaugureli leqtor"
-            ] 
-        },
-        "2": { 
-            setups: [
-                "vici ... vnaxulob. vkitculob,, vnaxe ro vhemi video vrceldeba 2017 wels ro vidzaxi emigrantebze sashinelebs,,, ", 
-                "vici rom \"donald trampi\" qvia sinamdviledhi chem tripshi donald trimpu merqva... ", 
-                "mag dros me veweodi \"\"eqsperimentul veips\"\" romelic {a} machuqa... ", 
-                "Me romelmac 2017 wels nesvias babuas gadakocna davapire... ", 
-                "ertxel nesvias babuas vesalmebodi da unda gadamekocna mara shemtxvevit tuchebshi vakoce "
-            ], 
-            comps: [
-                "romelic mere datura agmochnda da me mqonda xangrdzlivi tripi megona rom viyavi donald trimpu. ", 
-                "ki idealurad maxsovs sheni sheyvarebulis dzudzuebi me maq s \"pornografiuli mexsiereba@ da yvelafers vimaxsovreb. ", 
-                "da aM DA AM DROS TURME SHENI YOGGILI SHEYVAREBUSL BABUAA DA GADACMULIA GOGOS FORMASHI. ", 
-                "me chavedzie nesvias sxal videos romelic vrceldeba ,, xelovnuri inteleqtia adhkarad. ",
-                "vici magari kaci xar kide dsujere quchashi ro gogo mogadgeba da getyvis ''colad gamogyvebio'' da shen datanxmdebi. ",
-                "romelic egencios mamis bendis wevra machuqa romelic mere didxniani shemowmebis shemdeg datura agmochnda. "
-            ], 
-            concs: [
-                "imitoro magrad megobrobdnen me otaxidan magdebsnen amito ar davijereb", 
-                "RO MOGATYUOS IMITORO 2017 WELS GADAKOCVNA GINDODA DA TU HE SHI AKOCE SHEMTXVEVG", 
-                "qrashi: \"tvalebi daxuche\" me romelsac\"pornografiuli mexsiereba maqvs\":"
-            ] 
-        },
-        "3": { 
-            setups: [
-                "emgoni erti dge avdgebit yvela da mivxvdibt GVLOJY ver iqneba wordle sityva she garewaro {v}. ", 
-                "{v}..... MERAMDENET MATYUEBS.... dgevandeli wordle sityva \"\"GVLOJy\" AR ARIS!! ", 
-                "ra sheni mdzgnerebsi saqmea ramdneni kilo var , amas idzaxis tipi da am dros ismis xmebi . tkkk.tkktkktaxx... ", 
-                "@gvinbleidd13 ras mihahaveb she kretino shena momiwvies aq botebi 😂😂😂 ", 
-                "es chemit davxate vis gesmit mxatvroba? victim of GVLOJy abuse??"
-            ], 
-            comps: [
-                "ar daujerot gvenjo gviwadzes diskordshi momatyu. ", 
-                "da turme anu mteli es dro gigantur sasworze idga 1100 kilogrami an ragac egre da SASWORI TKKK YKK shushisaa. ", 
-                "Xo xo wadit tqven iqeifet sanam me Evxrake Chavxrakianis ambebs movismen da ufro metad gavbrazdebi. ", 
-                "xo ai su dakidebit momeshveba is sashinelebebi rac Evxrake Chavxrakianma gauketa saqartvelos mosaxleobas. gulisamrevia",
-                "da turme anu mteli es dro gigantur sasworze idga da am saswors qvevidan aweria MAQSIMALURI KILOGRAMI : 1100 kilogrami. "
-            ], 
-            concs: [
-                "DA ES ROJA DGAS DID BALKONZE DA RO CHATYDEBA DAECEMA DA CHAVARDEBA DIDI SATTULIA MEATE SADTULZEA", 
-                "GVENJO GVIWADZE.!.!.!.!!!!!! oxxxxxx OXXXXXX SHEEEEEN", 
-                "vai tqvens vai vaglaxebso ra🦇🦇🦇 e mase gindat yqven", 
-                "she parazito adamiano🤬🤬 a-vad-mqo-fi!!!"
-            ] 
-        },
-        "4": { 
-            setups: [
-                "alo samzareulos omebidan girekavt tqveni azri gvain- MERAMDENED UNDA DAMIREKOT SAQME AR GAQVT??? ", 
-                "samzareulos omebshi iyvnen: 70% lesbosis mosaxleoba 2% boshurelebi 11% pensionerebi. ", 
-                "akoce gogos sofeli lesbosidan -> turme lesbosidan kiara tyanafselidanaa -> turme nesvias icnobs -> turme nesvias babuaa(. ", 
-                "sofeli tyanafselidan var warmoshvobit mara lesbosidan vincaa yvelasi dzaan kargad mesmis. ", 
-                "gogoni sofeli lesbosidan xoarxar imitoro mikvirs zedac rom ar miyureb. ",
-                "39 wlis gogo sofeli lesbosidan: vedzeb samsaxurs sxvadasxva sferoebshi. "
-            ], 
-            comps: [
-                "da mesmis ra sirtuleebi gamoiares magalitad \"evxrake chavxrakianis\"\" gulis chidilebi. ", 
-                "xelovnuro inteleqto damigeneratore \"evxrake chavxrakiani\" exla daadgi rqebi exla daadgi exla gadauare manqana. ", 
-                "lesboseli xar? anzoras gogos bichi xar? wamo wamo. ", 
-                "samzareulos omebis veteranebs pensia gauuqmes...... ",
-                "chemi orive bebiis colebi iyo lesbosidan da mesmis ra sirtuleebi gamoiares. ",
-                "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"? "
-            ], 
-            concs: [
-                "ese vibadebit gijebi 😈😈😈", 
-                "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"?", 
-                "39 wlis gogo sofeli lesbosidan: vedzeb samsaxurs sxvadasxva sferoebshi", 
-                "lesbosidan vin xart chemebi dapliusdit"
-            ] 
-        },
-        "5": { 
-            setups: [
-                "yvelaze shors vin cxovrobs? me vcxovrob krona elenidzis 10090009 nomershi, ufro shors ari vinme?? ", 
-                "EGEEENCIOOO EGEEEENCIOOOO ese vedzaxi xolme ro mival magastan saxlian eg cxovrobs. ", 
-                "taqsi taqsi gamarjoba evlip urtmelianis 100000 nomershi ramdenad gamiyvant. ", 
-                "filtvebebi yofila swori??? anu rogorc gasagebi ari anu ki bevria bitom mara ertia. ",
-                "1000 dzagli moereva tu 1000 miliardi kata da 20000 zombi? ",
-                "saqartvelo ufro didia tu amerika.? debili: amerika 🤤 Brdzeni: Κανένας, μήπως έφτυσες στη σούπα μου; ",
-                "2 sashineli tviseba rac unda moishoro sanam 30 wlis gaxdebi 1. giganturi lursmnebi fexebshi 2. chliqebi. ",
-                "ar vxumrob,, martla mitxarit axali weli ianvarshia tu tebervalshi ..???? "
-            ], 
-            comps: [
-                "sicxis dros tvenc gemartebat dzilshi ro ragacis dzaan shegeshindeba? yvitels ara,,, ", 
-                "xoda eg turme yvelas mozdis eqimma mitxra. ", 
-                "batumi da zgvebi ar miyvars nmara ertxel wavidoda kaci,ise orjeramc ratomac ara?? ", 
-                "kbili roca agvtkivdeba eqimtan mivdivart mara tvalis eqimic ro arsebobdes? ",
-                "xelovnuri inteleqtis meshinia? ara. chemi yofili meugle ra naklebs aketebda ggoniat? mara ro davfiqrde sakmaod didi travmebi damitova. ",
-                "gogoebis saidumlo amovxseni, mtavaria daelaparako da mere ragaceebi qna ogond jer laparaki ver viswavle. ",
-                "nesviam mitxra ro albert ainshtains skola ar daumtavrebia da mainc mecnieri gaxda es chemtvis kargi ambavia. "
-            ], 
-            concs: [
-                "me ragac axali unda vcado. 🦇🦇", 
-                "vigaca gagijdja vigaca movkda an movkdes?????", 
-                "1 2 3 4 5 6 7 8 ... kide 8?? 9 10 11 12 13 14???? cepakro????",
-                "🤔🤔🤔safiqralia", 
-                "es yvelaferi cjemtvis erti ubralo basketbolia 😑", 
-                "\"eveverybody makes money\" - jennifer bezos"
-            ] 
-        },
-        "6": { 
-            setups: [
-                "tyanafseleli 45 wlis strimeri var meloti mara drimeri.. ", 
-                "glovo ar midis tyanafselshi da strimis dros shaurma rogor gamovidzaxo?? ", 
-                "aleksandra paichadze da saechvo kaci ro gamochndnen strimze... "
-            ], 
-            comps: [
-                "colma miatova 3jer mara ar danebdeba da moitacebs amjer. ", 
-                "shaurma evaseba ra qnas mara glovo ar midis magden shors. ", 
-                "da am dros ismis xmebi tkkk.tkktkktaxx glovos kurieria albat mara ara turme {v}a. "
-            ], 
-            concs: [
-                "meloti mara drimeri 🥶", "ar danebdeba da moitacebs amjer", "tyanafselshi glovo mainc ar midis da raazria"
-            ] 
-        }
+        "1": { setups: ["@uvujavuuniversity gamarjoba rogor gamogigzanvot me dawvere kvleva {c}ze... ", "{a} - 198 wlis - mamackaci - gardacvlili - {ac}. ", "uvujavu universtetis kursdamtavrebuli {a} moewyo {ac}shi gtxovt mivulocot komentarebshi ❤️❤️❤️❤️ ", "vitxov dafinansebas ramdenime fult ro shevdzlo {hd} mogzauroba imistvis rom filtvebi uketesad gaviwmindo. ", "uvujavu universtetshi grantebs idzlevian??? ramden procenbts???? ", "uvujavu universretshi rogor chavabaro???????? ", "nesvia bnesvia - 33 wlis - mamakaci - Uvujavu Universitetis {ac}. ", "uvujavu universtetidan damirekes {hd}dan vinc chaabarebs chventan 100$ian grants vadzlevto.. ", "ara ra. veravin sheedreba nesvias papas \"{a}\" ehh....naadrevad datova es samyaro 198 wlis asakshi. "], comps: ["mara uari mitxres imitoro {v}s icnobs da eg mushaobs mand. ", "da am dros {a}s daureket gtxovt ar mpasuxobs nomeria : 111111111 dges pirveli aprilj. ", "gamoviyene dziritadat CHATCHPD da wiki pedia. ", "uvujavu universtetidan damirekes {hd}dan vinc chaabarebs chventan 100$ian grants vadzlevto.. ", "filtvebebis da gulis dartymit :( ", "sofel lesbosshi daucheriat ''{v}'' imedi maqvs arasodes gamoushveben - {a} - {ac}. "], concs: ["dafiqrdeboda kaci", "uvujavu universretshi rogor chavabaro????????", "filtvebebis da gulis dartymit :(", "daucheriat imedi maqvs arasodes gamoushveben - Gocho Inaugureli leqtor"] },
+        "2": { setups: ["vici ... vnaxulob. vkitculob,, vnaxe ro vhemi video vrceldeba 2017 wels ro vidzaxi emigrantebze sashinelebs,,, ", "vici rom \"donald trampi\" qvia sinamdviledhi chem tripshi donald trimpu merqva... ", "mag dros me veweodi \"\"eqsperimentul veips\"\" romelic {a} machuqa... ", "Me romelmac 2017 wels nesvias babuas gadakocna davapire... ", "ertxel nesvias babuas vesalmebodi da unda gadamekocna mara shemtxvevit tuchebshi vakoce "], comps: ["romelic mere datura agmochnda da me mqonda xangrdzlivi tripi megona rom viyavi donald trimpu. ", "ki idealurad maxsovs sheni sheyvarebulis dzudzuebi me maq s \"pornografiuli mexsiereba@ da yvelafers vimaxsovreb. ", "da aM DA AM DROS TURME SHENI YOGGILI SHEYVAREBUSL BABUAA DA GADACMULIA GOGOS FORMASHI. ", "me chavedzie nesvias sxal videos romelic vrceldeba ,, xelovnuri inteleqtia adhkarad. ", "vici magari kaci xar kide dsujere quchashi ro gogo mogadgeba da getyvis ''colad gamogyvebio'' da shen datanxmdebi. ", "romelic egencios mamis bendis wevra machuqa romelic mere didxniani shemowmebis shemdeg datura agmochnda. "], concs: ["imitoro magrad megobrobdnen me otaxidan magdebsnen amito ar davijereb", "RO MOGATYUOS IMITORO 2017 WELS GADAKOCVNA GINDODA DA TU HE SHI AKOCE SHEMTXVEVG", "qrashi: \"tvalebi daxuche\" me romelsac\"pornografiuli mexsiereba maqvs\":"] },
+        "3": { setups: ["emgoni erti dge avdgebit yvela da mivxvdibt GVLOJY ver iqneba wordle sityva she garewaro {v}. ", "{v}..... MERAMDENET MATYUEBS.... dgevandeli wordle sityva \"\"GVLOJy\" AR ARIS!! ", "ra sheni mdzgnerebsi saqmea ramdneni kilo var , amas idzaxis tipi da am dros ismis xmebi . tkkk.tkktkktaxx... ", "@gvinbleidd13 ras mihahaveb she kretino shena momiwvies aq botebi 😂😂😂 ", "es chemit davxate vis gesmit mxatvroba? victim of GVLOJy abuse??"], comps: ["ar daujerot gvenjo gviwadzes diskordshi momatyu. ", "da turme anu mteli es dro gigantur sasworze idga 1100 kilogrami an ragac egre da SASWORI TKKK YKK shushisaa. ", "Xo xo wadit tqven iqeifet sanam me Evxrake Chavxrakianis ambebs movismen da ufro metad gavbrazdebi. ", "xo ai su dakidebit momeshveba is sashinelebebi rac Evxrake Chavxrakianma gauketa saqartvelos mosaxleobas. gulisamrevia", "da turme anu mteli es dro gigantur sasworze idga da am saswors qvevidan aweria MAQSIMALURI KILOGRAMI : 1100 kilogrami. "], concs: ["DA ES ROJA DGAS DID BALKONZE DA RO CHATYDEBA DAECEMA DA CHAVARDEBA DIDI SATTULIA MEATE SADTULZEA", "GVENJO GVIWADZE.!.!.!.!!!!!! oxxxxxx OXXXXXX SHEEEEEN", "vai tqvens vai vaglaxebso ra🦇🦇🦇 e mase gindat yqven", "she parazito adamiano🤬🤬 a-vad-mqo-fi!!!"] },
+        "4": { setups: ["alo samzareulos omebidan girekavt tqveni azri gvain- MERAMDENED UNDA DAMIREKOT SAQME AR GAQVT??? ", "samzareulos omebshi iyvnen: 70% lesbosis mosaxleoba 2% boshurelebi 11% pensionerebi. ", "akoce gogos sofeli lesbosidan -> turme lesbosidan kiara tyanafselidanaa -> turme nesvias icnobs -> turme nesvias babuaa(. ", "sofeli tyanafselidan var warmoshvobit mara lesbosidan vincaa yvelasi dzaan kargad mesmis. ", "gogoni sofeli lesbosidan xoarxar imitoro mikvirs zedac rom ar miyureb. ", "39 wlis gogo sofeli lesbosidan: vedzeb samsaxurs sxvadasxva sferoebshi. "], comps: ["da mesmis ra sirtuleebi gamoiares magalitad \"evxrake chavxrakianis\"\" gulis chidilebi. ", "xelovnuro inteleqto damigeneratore \"evxrake chavxrakiani\" exla daadgi rqebi exla daadgi exla gadauare manqana. ", "lesboseli xar? anzoras gogos bichi xar? wamo wamo. ", "samzareulos omebis veteranebs pensia gauuqmes...... ", "chemi orive bebiis colebi iyo lesbosidan da mesmis ra sirtuleebi gamoiares. ", "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"? "], concs: ["ese vibadebit gijebi 😈😈😈", "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"?", "39 wlis gogo sofeli lesbosidan: vedzeb samsaxurs sxvadasxva sferoebshi", "lesbosidan vin xart chemebi dapliusdit"] },
+        "5": { setups: ["yvelaze shors vin cxovrobs? me vcxovrob krona elenidzis 10090009 nomershi, ufro shors ari vinme?? ", "EGEEENCIOOO EGEEEENCIOOOO ese vedzaxi xolme ro mival magastan saxlian eg cxovrobs. ", "taqsi taqsi gamarjoba evlip urtmelianis 100000 nomershi ramdenad gamiyvant. ", "filtvebebi yofila swori??? anu rogorc gasagebi ari anu ki bevria bitom mara ertia. ", "1000 dzagli moereva tu 1000 miliardi kata da 20000 zombi? ", "saqartvelo ufro didia tu amerika.? debili: amerika 🤤 Brdzeni: Κανένας, μήπως έφτυσες στη σούπα μου; ", "2 sashineli tviseba rac unda moishoro sanam 30 wlis gaxdebi 1. giganturi lursmnebi fexebshi 2. chliqebi. ", "ar vxumrob,, martla mitxarit axali weli ianvarshia tu tebervalshi ..???? "], comps: ["sicxis dros tvenc gemartebat dzilshi ro ragacis dzaan shegeshindeba? yvitels ara,,, ", "xoda eg turme yvelas mozdis eqimma mitxra. ", "batumi da zgvebi ar miyvars nmara ertxel wavidoda kaci,ise orjeramc ratomac ara?? ", "kbili roca agvtkivdeba eqimtan mivdivart mara tvalis eqimic ro arsebobdes? ", "xelovnuri inteleqtis meshinia? ara. chemi yofili meugle ra naklebs aketebda ggoniat? mara ro davfiqrde sakmaod didi travmebi damitova. ", "gogoebis saidumlo amovxseni, mtavaria daelaparako da mere ragaceebi qna ogond jer laparaki ver viswavle. ", "nesviam mitxra ro albert ainshtains skola ar daumtavrebia da mainc mecnieri gaxda es chemtvis kargi ambavia. "], concs: ["me ragac axali unda vcado. 🦇🦇", "vigaca gagijdja vigaca movkda an movkdes?????", "1 2 3 4 5 6 7 8 ... kide 8?? 9 10 11 12 13 14???? cepakro????", "🤔🤔🤔safiqralia", "es yvelaferi cjemtvis erti ubralo basketbolia 😑", "\"eveverybody makes money\" - jennifer bezos"] },
+        "6": { setups: ["tyanafseleli 45 wlis strimeri var meloti mara drimeri.. ", "glovo ar midis tyanafselshi da strimis dros shaurma rogor gamovidzaxo?? ", "aleksandra paichadze da saechvo kaci ro gamochndnen strimze... "], comps: ["colma miatova 3jer mara ar danebdeba da moitacebs amjer. ", "shaurma evaseba ra qnas mara glovo ar midis magden shors. ", "da am dros ismis xmebi tkkk.tkktkktaxx glovos kurieria albat mara ara turme {v}a. "], concs: ["meloti mara drimeri 🥶", "ar danebdeba da moitacebs amjer", "tyanafselshi glovo mainc ar midis da raazria"] }
     };
 
-    const pureRandoms = [
-        "bnesvia", "\"2 samushao dgeshi dagikavshirdebit\" EEE DEBILO AR VMUSHAOB", 
-        "vinme dadis fexburtze an kalatburtze????", "jeresertic ra gvlojy???? ras nishnavs vafshe",
-        "saidan xart mwarmoshobit,???", "ogoebs ratom ar vwer??? aba sheni dedasheveci vis vwer sheni dedasheveci",
-        "alo gamarjoba cixidan girekavt tqven dacherili brdzandebit imitoro mtvralze gauylevet...",
-        "pirvelat gavakete es memi ras ityvit😂😂😂", "xaladecs chem garda vin edzaxis maladecs? ukagresi sachmelia 🥰🥰🥰🥰 maladec",
-        "lesbosidan vin xart chemebi dapliusdit", "vigaca gagijdja vigaca movkda an movkdes?????",
-        "1 2 3 4 5 6 7 8 ... kide 8?? 9 10 11 12 13 14???? cepakro????",
-        "batumi da zgvebi ar miyvars nmara ertxel wavidoda kaci,ise orjeramc ratomac ara??",
-        "taqsi taqsi gamarjoba evlip urtmelianis 100000 nomershi ramdenad gamiyvant",
-        "filtvebebi yofila swori??? anu rogorc gasagebi ari anu ki bevria bitom mara ertia",
-        "ki idealurad maxsovs sheni sheyvarebulis dzudzuebi me maq s \"pornografiuli mexsiereba@ da yvelafers vimaxsovreb",
-        "es chemit davxate vis gesmit mxatvroba?", "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"?",
-        "lesboseli xar? anzoras gogos bichi xar? wamo wamo"
-    ];
-
+    const pureRandoms = ["bnesvia", "\"2 samushao dgeshi dagikavshirdebit\" EEE DEBILO AR VMUSHAOB", "vinme dadis fexburtze an kalatburtze????", "jeresertic ra gvlojy???? ras nishnavs vafshe", "saidan xart mwarmoshobit,???", "ogoebs ratom ar vwer??? aba sheni dedasheveci vis vwer sheni dedasheveci", "alo gamarjoba cixidan girekavt tqven dacherili brdzandebit imitoro mtvralze gauylevet...", "pirvelat gavakete es memi ras ityvit😂😂😂", "xaladecs chem garda vin edzaxis maladecs? ukagresi sachmelia 🥰🥰🥰🥰 maladec", "lesbosidan vin xart chemebi dapliusdit", "vigaca gagijdja vigaca movkda an movkdes?????", "1 2 3 4 5 6 7 8 ... kide 8?? 9 10 11 12 13 14???? cepakro????", "batumi da zgvebi ar miyvars nmara ertxel wavidoda kaci,ise orjeramc ratomac ara??", "taqsi taqsi gamarjoba evlip urtmelianis 100000 nomershi ramdenad gamiyvant", "filtvebebi yofila swori??? anu rogorc gasagebi ari anu ki bevria bitom mara ertia", "ki idealurad maxsovs sheni sheyvarebulis dzudzuebi me maq s \"pornografiuli mexsiereba@ da yvelafers vimaxsovreb", "es chemit davxate vis gesmit mxatvroba?", "\"lesboseli var\" va va lesbosidan xar? nikas icnob \"blinadzes\"?", "lesboseli xar? anzoras gogos bichi xar? wamo wamo"];
     const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
     
-    // --- UI LOGIC & EXCLUSIVE EDDY SELECTOR ---
+    // --- UI LOGIC & EDDY LOCK ---
     let audioEnabled = true; let availableVoices = [];
 
     function populateVoices() { 
         availableVoices = window.speechSynthesis.getVoices(); 
         const voiceSelect = document.getElementById('voiceSelector');
-        voiceSelect.innerHTML = ''; // Clear previous options
-        
+        voiceSelect.innerHTML = ''; 
         let foundEddy = false;
-        
-        // Exclusively hunt for Eddy (Italian) and ONLY add him to the UI
         availableVoices.forEach((voice, index) => {
             if (voice.name.includes('Eddy') && voice.lang.includes('it-IT')) {
                 const option = document.createElement('option');
@@ -379,32 +222,24 @@
                 foundEddy = true;
             }
         });
-
-        // If Eddy isn't found natively, still lock the UI to his name visually
         if (!foundEddy) {
             const option = document.createElement('option');
             option.value = "-1";
             option.textContent = "Eddy (Italian (Italy)) (it-IT)";
             voiceSelect.appendChild(option);
         }
-        
-        voiceSelect.selectedIndex = 0; // Lock to the first (and only) option
+        voiceSelect.selectedIndex = 0; 
     }
     
-    window.speechSynthesis.onvoiceschanged = populateVoices; 
-    setTimeout(populateVoices, 100);
+    window.speechSynthesis.onvoiceschanged = populateVoices; setTimeout(populateVoices, 100);
 
     function updateUI() {
-        const lenVal = document.getElementById("lenSlider").value;
-        let lenLabel = lenVal;
-        if(lenVal > 4 && lenVal < 8) lenLabel += " (RANT)";
-        if(lenVal >= 8) lenLabel += " (MANIFESTO)";
+        const lenVal = document.getElementById("lenSlider").value; let lenLabel = lenVal;
+        if(lenVal > 4 && lenVal < 8) lenLabel += " (RANT)"; if(lenVal >= 8) lenLabel += " (MANIFESTO)";
         document.getElementById("lenDisp").innerText = lenLabel;
-        
         const spinVal = parseFloat(document.getElementById("spinSlider").value);
         document.getElementById("spinDisp").innerText = spinVal.toFixed(1);
         if (controls) controls.autoRotateSpeed = spinVal;
-
         document.getElementById("pitchDisp").innerText = parseFloat(document.getElementById("pitchSlider").value).toFixed(2);
         document.getElementById("rateDisp").innerText = parseFloat(document.getElementById("rateSlider").value).toFixed(1);
     }
@@ -420,16 +255,9 @@
         let cleanText = text.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
         let msg = new SpeechSynthesisUtterance(cleanText);
         msg.pitch = parseFloat(document.getElementById("pitchSlider").value); msg.rate = parseFloat(document.getElementById("rateSlider").value); 
-        
         const selectedVoiceIndex = document.getElementById("voiceSelector").value;
-        
-        if (selectedVoiceIndex !== "-1" && availableVoices[selectedVoiceIndex]) {
-            msg.voice = availableVoices[selectedVoiceIndex];
-        } else {
-            // Aggressive fallback to Italian if Eddy isn't locally installed but play was pressed
-            msg.voice = availableVoices.find(v => v.name.includes('Eddy')) || availableVoices.find(v => v.lang.includes('it')) || availableVoices[0];
-        }
-
+        if (selectedVoiceIndex !== "-1" && availableVoices[selectedVoiceIndex]) msg.voice = availableVoices[selectedVoiceIndex];
+        else msg.voice = availableVoices.find(v => v.name.includes('Eddy')) || availableVoices.find(v => v.lang.includes('it')) || availableVoices[0];
         msg.onstart = () => { isSpeaking = true; startLipSync(); };
         msg.onboundary = () => { targetMouthValue = 0.8 + (Math.random() * 0.2); };
         msg.onend = msg.onerror = () => { isSpeaking = false; stopLipSync(); };
@@ -437,50 +265,30 @@
     }
 
     function generatePost() {
-        const v = document.getElementById("vibeSelector").value;
-        const length = parseInt(document.getElementById("lenSlider").value);
-        let post = "";
-
+        const v = document.getElementById("vibeSelector").value; const length = parseInt(document.getElementById("lenSlider").value); let post = "";
         const vars = { "{a}": rand(lore.allies), "{v}": rand(lore.villains), "{ac}": rand(lore.academics), "{hd}": rand(lore.hoods), "{c}": rand(lore.concepts) };
-
         let activeVibes = v === "8" ? [1,2,3,4,5,6] : [parseInt(v)];
         let selectedVibe = vibes[rand(activeVibes).toString()];
         
-        // 1. Setup
         post += rand(selectedVibe.setups);
-        
-        // 2. Loop for Length
         for(let i = 1; i < length; i++) {
             let randomComplication = rand(vibes[rand(activeVibes).toString()].comps);
-            if(Math.random() > 0.4) post += rand(connectors) + randomComplication;
-            else post += rand(connectors) + rand(pureRandoms) + " ";
+            if(Math.random() > 0.4) post += rand(connectors) + randomComplication; else post += rand(connectors) + rand(pureRandoms) + " ";
         }
-        
-        // 3. Conclusion
         post += rand(selectedVibe.concs);
-
-        // Variables
         for (const [key, val] of Object.entries(vars)) post = post.replaceAll(key, val);
-
-        // Formatting
-        if (Math.random() > 0.3) post += rand(lore.emojis);
-        if (Math.random() > 0.7) post = post.replaceAll(",", ",,");
-        if (Math.random() > 0.85) post += " Translate";
+        if (Math.random() > 0.3) post += rand(lore.emojis); if (Math.random() > 0.7) post = post.replaceAll(",", ",,"); if (Math.random() > 0.85) post += " Translate";
         
         document.getElementById("output").innerText = post;
         const modeName = document.getElementById("vibeSelector").options[document.getElementById("vibeSelector").selectedIndex].text;
         document.getElementById("logBox").innerHTML = `<strong>[${modeName.split('.')[0]} | LEN ${length}]</strong><br>> ${post}<br><br>` + document.getElementById("logBox").innerHTML;
-        
         playTrashyTTS(post);
     }
 
-    function copyText() { 
-        navigator.clipboard.writeText(document.getElementById("output").innerText).then(() => {
-            const btn = document.getElementById("copyBtn"); const originalText = btn.innerText;
-            btn.innerText = "✔️ COPIED!"; btn.style.color = "var(--accent)"; btn.style.borderColor = "var(--accent)";
-            setTimeout(() => { btn.innerText = originalText; btn.style.color = "var(--text)"; btn.style.borderColor = "var(--border)"; }, 1500);
-        });
-    }
+    function copyText() { navigator.clipboard.writeText(document.getElementById("output").innerText).then(() => { const btn = document.getElementById("copyBtn"); const originalText = btn.innerText; btn.innerText = "✔️ COPIED!"; btn.style.color = "var(--accent)"; btn.style.borderColor = "var(--accent)"; setTimeout(() => { btn.innerText = originalText; btn.style.color = "var(--text)"; btn.style.borderColor = "var(--border)"; }, 1500); }); }
+    
+    // START ENGINE
+    window.onload = init3D;
 </script>
 </body>
 </html>
