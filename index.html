@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PerePT v0.3-alpha</title>
+    <title>PerePT v0.3.4-alpha</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -27,7 +27,7 @@
         .visual-stage { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; position: relative; }
         #canvas-container { width: 350px; height: 350px; border: 1px solid var(--border); background-color: #0a0a0c; cursor: grab; border-radius: 8px; box-shadow: 0 4px 30px rgba(0, 255, 65, 0.08);}
         #canvas-container:active { cursor: grabbing; }
-        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; animation: pulse 1.5s infinite; pointer-events: none;}
+        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; animation: pulse 1.5s infinite; pointer-events: none; text-align: center; line-height: 1.5;}
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
         .settings-panel { background-color: var(--card); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px;}
@@ -83,7 +83,7 @@
             <label>VOICE PROTOCOL:</label>
             <select id="voiceSelector" class="voice-sel"></select>
         </div>
-        </div>
+    </div>
 
     <div class="controls">
         <select id="vibeSelector" class="main-sel">
@@ -138,11 +138,24 @@
     function stopLipSync() { clearInterval(lipSyncInterval); targetMouthValue = 0; }
 
     function loadBuiltInModel() {
-        const loader = new THREE.GLTFLoader(), loadingText = document.getElementById('loading-text');
-        loader.load('./perekur_MASK.glb', 
+        const loader = new THREE.GLTFLoader();
+        const loadingText = document.getElementById('loading-text');
+        
+        // 10-Second Hard Timeout Failsafe
+        const timeoutFailsafe = setTimeout(() => {
+            loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>CORS Blocked (Local file).<br>Host on GitHub Pages to fix.";
+            loadingText.style.color = "var(--alert)";
+            loadingText.style.animation = "none";
+        }, 10000);
+
+        loader.load('perekur_MASK.glb', 
             function (gltf) {
-                loadingText.style.display = 'none'; if (faceMesh) scene.remove(faceMesh); faceMesh = gltf.scene;
+                clearTimeout(timeoutFailsafe); // Cancel the error message if it worked
+                loadingText.style.display = 'none'; 
+                
+                if (faceMesh) scene.remove(faceMesh); faceMesh = gltf.scene;
                 mouthMesh = null; mouthMorphIndex = -1;
+                
                 faceMesh.traverse((child) => {
                     if (child.isMesh && child.morphTargetDictionary) {
                         for (const key in child.morphTargetDictionary) {
@@ -151,21 +164,27 @@
                         }
                     }
                 });
+                
                 const box = new THREE.Box3().setFromObject(faceMesh), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
                 const scale = 3.5 / Math.max(size.x, size.y, size.z);
                 faceMesh.scale.set(scale, scale, scale); faceMesh.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
                 scene.add(faceMesh);
             }, 
             function (xhr) {
-                if (xhr.lengthComputable) {
-                    const percentComplete = xhr.loaded / xhr.total * 100;
-                    loadingText.innerText = "MOUNTING: " + Math.round(percentComplete, 2) + "%";
+                // Safely calculate progress without dividing by zero
+                if (xhr.lengthComputable && xhr.total > 0) {
+                    const percentComplete = (xhr.loaded / xhr.total) * 100;
+                    loadingText.innerText = "MOUNTING: " + Math.round(percentComplete) + "%";
+                } else {
+                    loadingText.innerText = "MOUNTING MESH...";
                 }
             }, 
             function (error) {
-                console.error("CRITICAL GLTF LOADER ERROR:", error);
-                loadingText.innerText = "ERROR! CHECK CHROME CONSOLE."; 
+                clearTimeout(timeoutFailsafe);
+                console.error(error);
+                loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>CORS Blocked (Local file).<br>Host on GitHub Pages to fix."; 
                 loadingText.style.color = "var(--alert)"; 
+                loadingText.style.animation = "none";
             }
         );
     }
@@ -446,23 +465,18 @@
         let activeVibes = v === "8" ? [1,2,3,4,5,6] : [parseInt(v)];
         let selectedVibe = vibes[rand(activeVibes).toString()];
         
-        // 1. Setup
         post += rand(selectedVibe.setups);
         
-        // 2. Loop for Length
         for(let i = 1; i < length; i++) {
             let randomComplication = rand(vibes[rand(activeVibes).toString()].comps);
             if(Math.random() > 0.4) post += rand(connectors) + randomComplication;
             else post += rand(connectors) + rand(pureRandoms) + " ";
         }
         
-        // 3. Conclusion
         post += rand(selectedVibe.concs);
 
-        // Variables
         for (const [key, val] of Object.entries(vars)) post = post.replaceAll(key, val);
 
-        // Formatting
         if (Math.random() > 0.3) post += rand(lore.emojis);
         if (Math.random() > 0.7) post = post.replaceAll(",", ",,");
         if (Math.random() > 0.85) post += " Translate";
@@ -481,6 +495,9 @@
             setTimeout(() => { btn.innerText = originalText; btn.style.color = "var(--text)"; btn.style.borderColor = "var(--border)"; }, 1500);
         });
     }
+
+    // START ENGINE
+    window.onload = init3D;
 </script>
 </body>
 </html>
