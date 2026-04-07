@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PerePT v0.3.5-alpha</title>
+    <title>PerePT v0.3.6-alpha</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -17,42 +17,58 @@
             --border: #27272a;
         }
 
-        body { background-color: var(--bg); color: var(--text); font-family: 'Menlo', 'Courier New', monospace; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 950px; }
-        .header { text-align: center; margin-bottom: 20px; margin-top: 10px;}
-        .title { font-size: 3rem; font-weight: bold; color: var(--text); margin: 0; letter-spacing: 2px;}
+        body { background-color: var(--bg); color: var(--text); font-family: 'Menlo', 'Courier New', monospace; margin: 0; padding: 15px; display: flex; justify-content: center; height: 100vh; box-sizing: border-box; overflow: hidden;}
+        .container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; height: 100%; }
+        
+        .header { text-align: center; margin-bottom: 15px; flex-shrink: 0;}
+        .title { font-size: 2.2rem; font-weight: bold; color: var(--text); margin: 0; letter-spacing: 2px;}
         .title span { color: var(--accent); }
-        .subtitle { font-size: 1rem; font-weight: bold; color: #71717a; margin-top: 5px; letter-spacing: 2px;}
+        .subtitle { font-size: 0.9rem; font-weight: bold; color: #71717a; margin-top: 2px; letter-spacing: 2px;}
 
-        /* Moved Selector to the top */
-        .top-selector { margin-bottom: 20px; width: 100%; }
-        select.main-sel { width: 100%; padding: 15px; font-family: 'Menlo', monospace; background-color: var(--card); color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; text-align: center;}
+        /* DASHBOARD GRID SYSTEM */
+        .top-grid { display: grid; grid-template-columns: 320px 1fr; gap: 15px; margin-bottom: 15px; flex-shrink: 0;}
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex-grow: 1; min-height: 0; }
 
-        .visual-stage { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; position: relative; }
-        #canvas-container { width: 350px; height: 350px; border: 1px solid var(--border); background-color: #0a0a0c; cursor: grab; border-radius: 8px; box-shadow: 0 4px 30px rgba(0, 255, 65, 0.08);}
+        /* 3D STAGE */
+        .visual-stage { display: flex; flex-direction: column; align-items: center; position: relative; background-color: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-shadow: 0 4px 20px rgba(0, 255, 65, 0.05);}
+        #canvas-container { width: 100%; aspect-ratio: 1/1; background-color: #050505; cursor: grab; border-radius: 6px; border: 1px solid var(--border);}
         #canvas-container:active { cursor: grabbing; }
-        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; animation: pulse 1.5s infinite; pointer-events: none; text-align: center; line-height: 1.5;}
+        #loading-text { position: absolute; top: 45%; color: var(--accent); font-weight: bold; animation: pulse 1.5s infinite; pointer-events: none; text-align: center; line-height: 1.5; width: 100%;}
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        .settings-panel { background-color: var(--card); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px;}
-        .settings-header { color: #71717a; font-size: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 5px; margin-top: 5px; font-weight: bold; letter-spacing: 1px;}
-        .slider-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;}
-        .slider-row label { font-weight: bold; color: var(--text); min-width: 140px;}
+        /* SETTINGS & CONTROLS */
+        .settings-panel { background-color: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; justify-content: center;}
+        .settings-header { color: #71717a; font-size: 0.8rem; border-bottom: 1px solid var(--border); padding-bottom: 4px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;}
+        
+        .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;}
+        .slider-row label { font-weight: bold; color: var(--text); min-width: 130px;}
         .slider-row span { color: var(--accent); }
-        input[type="range"] { flex-grow: 1; margin: 0 15px; cursor: pointer; accent-color: var(--accent); }
+        input[type="range"] { flex-grow: 1; margin: 0 10px; cursor: pointer; accent-color: var(--accent); }
+        
+        select.voice-sel { flex-grow: 1; padding: 6px; font-family: monospace; background: rgba(0, 255, 65, 0.05); color: var(--accent); border: 1px solid var(--accent); max-width: calc(100% - 140px); font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 0.85rem;}
 
-        .action-row { display: flex; gap: 15px; margin-bottom: 20px; }
-        button.btn-exec { flex-grow: 1; padding: 15px 35px; font-family: 'Menlo', monospace; font-size: 1.2rem; font-weight: bold; background-color: var(--accent); color: #000; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;}
+        select.main-sel { width: 100%; padding: 10px; font-family: 'Menlo', monospace; background-color: #050505; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; font-size: 0.95rem; cursor: pointer; font-weight: bold; text-align: center; margin-top: 5px;}
+        button.btn-exec { width: 100%; padding: 12px; font-family: 'Menlo', monospace; font-size: 1.05rem; font-weight: bold; background-color: var(--accent); color: #000; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; margin-top: 5px;}
         button.btn-exec:hover { background-color: #00cc33; transform: translateY(-2px);}
 
-        .output-box { background-color: var(--card); border: 1px solid var(--border); padding: 25px; min-height: 150px; font-size: 1.15rem; margin-bottom: 15px; line-height: 1.7; border-radius: 8px; color: #fff;}
-        .btn-toggle { background-color: rgba(255, 51, 102, 0.1); color: var(--alert); border: 1px solid var(--alert); width: 100%; margin-bottom: 10px; padding: 12px; font-family: 'Menlo', monospace; font-weight: bold; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
+        /* BOTTOM SECTION (OUTPUT & LOGS) */
+        .output-col { display: flex; flex-direction: column; gap: 10px; min-height: 0;}
+        .output-box { background-color: var(--card); border: 1px solid var(--border); padding: 15px; flex-grow: 1; font-size: 1.05rem; line-height: 1.5; border-radius: 8px; color: #fff; overflow-y: auto;}
+        
+        .btn-row { display: flex; gap: 10px; flex-shrink: 0;}
+        .btn-toggle { background-color: rgba(255, 51, 102, 0.1); color: var(--alert); border: 1px solid var(--alert); flex: 1; padding: 10px; font-family: 'Menlo', monospace; font-size: 0.85rem; font-weight: bold; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
         .btn-toggle.active { background-color: rgba(0, 255, 65, 0.1); color: var(--accent); border: 1px solid var(--accent); }
-        .btn-copy { background-color: #18181b; color: var(--text); border: 1px solid var(--border); width: 100%; padding: 12px; font-family: 'Menlo', monospace; cursor: pointer; margin-bottom: 20px; border-radius: 6px; transition: all 0.2s;}
+        .btn-copy { background-color: #18181b; color: var(--text); border: 1px solid var(--border); flex: 1; padding: 10px; font-family: 'Menlo', monospace; font-size: 0.85rem; cursor: pointer; border-radius: 6px; transition: all 0.2s;}
         .btn-copy:hover { background-color: #27272a; }
 
-        .log-box { background-color: #000; border: 1px solid var(--border); padding: 20px; height: 300px; overflow-y: auto; color: #a1a1aa; border-radius: 8px; font-size: 0.85rem; line-height: 1.6;}
+        .log-box { background-color: #050505; border: 1px solid var(--border); padding: 15px; height: 100%; box-sizing: border-box; overflow-y: auto; color: #a1a1aa; border-radius: 8px; font-size: 0.8rem; line-height: 1.4;}
         .log-box strong { color: var(--accent); }
+        
+        /* Custom scrollbar for sleekness */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body>
@@ -60,46 +76,56 @@
 <div class="container">
     <div class="header">
         <h1 class="title">Pere<span>PT</span></h1>
-        <div class="subtitle">v0.3.5-alpha build</div>
+        <div class="subtitle">v0.3.6-alpha (Compact Build)</div>
     </div>
 
-    <div class="top-selector">
-        <select id="vibeSelector" class="main-sel">
-            <option value="1">1. Uvujavu Academia & Grants</option>
-            <option value="2">2. The 2017 Datura Trauma</option>
-            <option value="3">3. GVLOJY & Caps-Lock Paranoia</option>
-            <option value="4">4. Samzareulos Omebi & Lesbosi</option>
-            <option value="5">5. Existential Geography & Anatomy</option>
-            <option value="6">6. The Streamer & Glovo Crisis</option>
-            <option value="8" selected>8. PURE CHAOS (OMNIBUS MASHUP)</option>
-        </select>
-    </div>
-
-    <div class="visual-stage">
-        <div id="canvas-container"></div>
-        <div id="loading-text">MOUNTING MESH...</div>
-    </div>
-
-    <div class="settings-panel">
-        <div class="settings-header">ENGINE MATRIX</div>
-        <div class="slider-row">
-            <label>LORE LENGTH: <span id="lenDisp">2</span></label>
-            <input type="range" id="lenSlider" min="1" max="10" step="0.01" value="2" oninput="updateUI()">
+    <div class="top-grid">
+        <div class="visual-stage">
+            <div id="canvas-container"></div>
+            <div id="loading-text">MOUNTING MESH...</div>
         </div>
-        <div class="slider-row">
-            <label>SPIN SPEED: <span id="spinDisp">0.50</span></label>
-            <input type="range" id="spinSlider" min="0" max="10" step="0.01" value="0.5" oninput="updateUI()">
+
+        <div class="settings-panel">
+            <div class="settings-header">ENGINE MATRIX</div>
+            <div class="slider-row">
+                <label>LORE LENGTH: <span id="lenDisp">2</span></label>
+                <input type="range" id="lenSlider" min="1" max="10" step="0.01" value="2" oninput="updateUI()">
+            </div>
+            <div class="slider-row">
+                <label>SPIN SPEED: <span id="spinDisp">0.50</span></label>
+                <input type="range" id="spinSlider" min="0" max="10" step="0.01" value="0.5" oninput="updateUI()">
+            </div>
+
+            <div class="settings-header" style="margin-top: 5px;">AUDIO PROTOCOL</div>
+            <div class="slider-row">
+                <label>VOICE:</label>
+                <select id="voiceSelector" class="voice-sel"></select>
+            </div>
+
+            <div class="settings-header" style="margin-top: 5px;">EXECUTION</div>
+            <select id="vibeSelector" class="main-sel">
+                <option value="1">1. Uvujavu Academia & Grants</option>
+                <option value="2">2. The 2017 Datura Trauma</option>
+                <option value="3">3. GVLOJY & Caps-Lock Paranoia</option>
+                <option value="4">4. Samzareulos Omebi & Lesbosi</option>
+                <option value="5">5. Existential Geography & Anatomy</option>
+                <option value="6">6. The Streamer & Glovo Crisis</option>
+                <option value="8" selected>8. PURE CHAOS (OMNIBUS MASHUP)</option>
+            </select>
+            <button class="btn-exec" onclick="generatePost()">INITIALIZE GENERATION</button>
         </div>
     </div>
 
-    <div class="action-row">
-        <button class="btn-exec" onclick="generatePost()">EXECUTE GENERATION</button>
+    <div class="bottom-grid">
+        <div class="output-col">
+            <div class="output-box" id="output">System initialized. Trillions of permutations available...</div>
+            <div class="btn-row">
+                <button class="btn-copy" id="copyBtn" onclick="copyText()">📋 COPY DATA</button>
+                <button class="btn-toggle active" id="audioToggle" onclick="toggleAudio()">🔊 EDDY: ON</button>
+            </div>
+        </div>
+        <div class="log-box" id="logBox"></div>
     </div>
-
-    <div class="output-box" id="output">System initialized. Trillions of permutations available...</div>
-    <button class="btn-copy" id="copyBtn" onclick="copyText()">📋 COPY DATA</button>
-    <button class="btn-toggle active" id="audioToggle" onclick="toggleAudio()">🔊 EDDY PROTOCOL: ON</button>
-    <div class="log-box" id="logBox"></div>
 </div>
 
 <script>
@@ -111,17 +137,28 @@
         const container = document.getElementById('canvas-container');
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000); camera.position.z = 5;
-        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.setSize(350, 350);
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); 
+        
+        // Dynamically size based on container
+        const rect = container.getBoundingClientRect();
+        renderer.setSize(rect.width, rect.height);
         container.appendChild(renderer.domElement);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.05; controls.autoRotate = true; controls.autoRotateSpeed = 0.5; controls.enableZoom = true;
         
-        // DOUBLED LIGHTING INTENSITY
         scene.add(new THREE.DirectionalLight(0xffffff, 3.0).position.set(2, 2, 5)); 
         scene.add(new THREE.AmbientLight(0x404040, 4.0));
 
         animate3D(); loadBuiltInModel();
+        
+        // Handle window resize for the canvas
+        window.addEventListener('resize', () => {
+            const newRect = container.getBoundingClientRect();
+            renderer.setSize(newRect.width, newRect.height);
+            camera.aspect = newRect.width / newRect.height;
+            camera.updateProjectionMatrix();
+        });
     }
 
     function animate3D() {
@@ -143,7 +180,7 @@
         const loadingText = document.getElementById('loading-text');
         
         const timeoutFailsafe = setTimeout(() => {
-            loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>CORS Blocked (Local file).<br>Host on GitHub Pages to fix.";
+            loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>Host on GitHub Pages to fix.";
             loadingText.style.color = "var(--alert)";
             loadingText.style.animation = "none";
         }, 10000);
@@ -181,7 +218,7 @@
             function (error) {
                 clearTimeout(timeoutFailsafe);
                 console.error(error);
-                loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>CORS Blocked (Local file).<br>Host on GitHub Pages to fix."; 
+                loadingText.innerHTML = "⚠️ MESH MOUNT FAILED.<br>CORS Blocked (Local file)."; 
                 loadingText.style.color = "var(--alert)"; 
                 loadingText.style.animation = "none";
             }
@@ -220,6 +257,28 @@
 
     function populateVoices() { 
         availableVoices = window.speechSynthesis.getVoices(); 
+        const voiceSelect = document.getElementById('voiceSelector');
+        voiceSelect.innerHTML = ''; 
+        let foundEddy = false;
+        
+        availableVoices.forEach((voice, index) => {
+            if (voice.name.includes('Eddy') && voice.lang.includes('it-IT')) {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Eddy (Italian (Italy)) (it-IT)`;
+                voiceSelect.appendChild(option);
+                foundEddy = true;
+            }
+        });
+
+        if (!foundEddy) {
+            const option = document.createElement('option');
+            option.value = "-1";
+            option.textContent = "Eddy (Italian (Italy)) (it-IT)";
+            voiceSelect.appendChild(option);
+        }
+        
+        voiceSelect.selectedIndex = 0; 
     }
     
     window.speechSynthesis.onvoiceschanged = populateVoices; 
@@ -249,7 +308,7 @@
         let cleanText = text.replace(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
         let msg = new SpeechSynthesisUtterance(cleanText);
         
-        // HARDCODED PITCH AND RATE - NO UI REQUIRED
+        // HARDCODED PITCH AND RATE
         msg.pitch = 0.65; 
         msg.rate = 0.8; 
         
